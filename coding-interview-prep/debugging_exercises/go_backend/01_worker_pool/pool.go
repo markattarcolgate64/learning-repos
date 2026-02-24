@@ -8,15 +8,18 @@
 // Expected behavior:
 //   - Submit() sends jobs to the pool for processing
 //   - Workers process jobs concurrently and store results
-//   - Shutdown() stops all workers and waits for them to finish
+//   - Shutdown() stops accepting new jobs, waits for all pending jobs to be
+//     processed, then returns
 //   - After Shutdown(), Results() returns all processed results
 //
 // Symptoms of the bug:
-//   - Shutdown() hangs forever (deadlock)
-//   - The program never terminates when the pool is shut down
-//   - Tests timeout waiting for Shutdown() to return
+//   - Not all submitted jobs appear in the results after Shutdown()
+//   - The number of results is less than the number of submitted jobs
+//   - Tests report "expected 20 results, got N" where N < 20
+//   - The problem is worse when the job channel has buffered (pending) jobs
 //
-// Hint: Look carefully at how workers signal completion and how Shutdown() waits.
+// Hint: Look at what happens to jobs sitting in the channel buffer when
+//       Shutdown() is called. Does the worker finish processing them?
 
 package workerpool
 
@@ -40,10 +43,10 @@ type Result struct {
 type Pool struct {
 	numWorkers int
 	jobs       chan Job
-	done       chan struct{}
+	quit       chan struct{}
+	wg         sync.WaitGroup
 	results    []Result
 	mu         sync.Mutex
-	shutdown   chan struct{}
 }
 
 // New creates a new worker pool with the given number of workers.
@@ -51,9 +54,8 @@ func New(numWorkers int) *Pool {
 	p := &Pool{
 		numWorkers: numWorkers,
 		jobs:       make(chan Job, 100),
-		done:       make(chan struct{}),
+		quit:       make(chan struct{}),
 		results:    make([]Result, 0),
-		shutdown:   make(chan struct{}),
 	}
 	p.start()
 	return p
@@ -62,19 +64,20 @@ func New(numWorkers int) *Pool {
 // start launches the worker goroutines.
 func (p *Pool) start() {
 	for i := 0; i < p.numWorkers; i++ {
+		p.wg.Add(1)
 		go p.worker(i)
 	}
 }
 
-// worker processes jobs from the jobs channel until shutdown is signaled.
+// worker processes jobs from the jobs channel.
 func (p *Pool) worker(id int) {
+	defer p.wg.Done()
+
 	for {
 		select {
-		case job, ok := <-p.jobs:
-			if !ok {
-				p.done <- struct{}{}
-				return
-			}
+		case <-p.quit:
+			return
+		case job := <-p.jobs:
 			result := Result{
 				JobID:  job.ID,
 				Output: processJob(job),
@@ -82,9 +85,6 @@ func (p *Pool) worker(id int) {
 			p.mu.Lock()
 			p.results = append(p.results, result)
 			p.mu.Unlock()
-		case <-p.shutdown:
-			p.done <- struct{}{}
-			return
 		}
 	}
 }
@@ -101,13 +101,8 @@ func (p *Pool) Submit(job Job) {
 
 // Shutdown gracefully stops the pool and waits for all workers to finish.
 func (p *Pool) Shutdown() {
-	close(p.shutdown)
-	close(p.jobs)
-
-	// Wait for all workers to signal completion
-	for i := 0; i < p.numWorkers; i++ {
-		<-p.done
-	}
+	close(p.quit)
+	p.wg.Wait()
 }
 
 // Results returns all processed results.

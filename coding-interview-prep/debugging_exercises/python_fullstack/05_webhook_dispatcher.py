@@ -23,9 +23,10 @@ Expected behavior:
     - The backoff between retries should double each time: delay, delay*2, delay*4...
 
 Symptoms:
-    Tests are failing because the dispatcher gives up after the very first
-    failure instead of retrying. Events that would succeed on a second or third
-    attempt are being marked as permanently failed.
+    Tests are failing because the dispatcher appears to give up too early --
+    it retries fewer times than expected. Webhooks that should succeed after
+    a few transient failures are being marked as permanently failed, and the
+    total attempt count is off by one.
 """
 
 import unittest
