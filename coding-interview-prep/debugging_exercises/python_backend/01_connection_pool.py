@@ -34,11 +34,15 @@ class Connection:
     _counter = 0
     _lock = threading.Lock()
 
-    def __init__(self):
-        with Connection._lock:
-            Connection._counter += 1
-            self.id = Connection._counter
+    def __init__(self, id: int = None):
+        if id != None:
+            self.id = id 
+        else:
+            with Connection._lock:
+                Connection._counter += 1
+                self.id = Connection._counter
         self.in_use = False
+
 
     def execute(self, query: str) -> str:
         if not self.in_use:
@@ -109,9 +113,10 @@ class ConnectionPool:
                 )
 
             conn.in_use = False
+            tmp_id = conn.id
             self._in_use.discard(conn.id)
             # Return connection to the available pool
-            self._available.append(Connection())
+            self._available.append(Connection(tmp_id))
 
     @property
     def available_count(self) -> int:
