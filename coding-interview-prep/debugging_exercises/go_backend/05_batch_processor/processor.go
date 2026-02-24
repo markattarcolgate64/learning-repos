@@ -62,9 +62,7 @@ func (p *Processor) flush() {
 	// Pass the current buffer to the callback
 	p.callback(p.buffer)
 
-	// "Reset" the buffer by re-slicing to zero length.
-	// This retains the underlying array, so the next append
-	// will write into the same memory that was just flushed.
+	// Reset the buffer for the next batch
 	p.buffer = p.buffer[:0]
 }
 
