@@ -35,6 +35,7 @@ python -m unittest discover -s . -p "test_exercise.py" -v
 | 03 | Model Evaluation & Comparison | \*\* | Confusion matrix, precision/recall, cross-validation, model selection |
 | 04 | The Full Pipeline | \*\*\* | End-to-end workflow, sklearn Pipeline, EDA, iteration |
 | 05 | Neural Network from Scratch | \*\*\* | Forward prop, backprop, training loop, numpy only |
+| 06 | Computer Vision | \*\* | Images as arrays, pixel normalization, digit classification, misclassification analysis |
 
 ## How to Use
 
