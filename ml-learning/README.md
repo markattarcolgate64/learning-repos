@@ -15,6 +15,11 @@ starting from the simplest possible case and ending with a neural network from s
 pip install numpy pandas scikit-learn
 ```
 
+**Exercise 07 also requires:**
+```bash
+pip install ultralytics   # installs torch, PIL, opencv (~300MB)
+```
+
 ## Running Tests
 
 ```bash
@@ -36,6 +41,7 @@ python -m unittest discover -s . -p "test_exercise.py" -v
 | 04 | The Full Pipeline | \*\*\* | End-to-end workflow, sklearn Pipeline, EDA, iteration |
 | 05 | Neural Network from Scratch | \*\*\* | Forward prop, backprop, training loop, numpy only |
 | 06 | Computer Vision | \*\* | Images as arrays, pixel normalization, digit classification, misclassification analysis |
+| 07 | Object Detection & YOLO | \*\*\* | YOLO inference, dataset prep, fine-tuning on custom objects, model evaluation |
 
 ## How to Use
 
