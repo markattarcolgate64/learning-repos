@@ -1,1 +1,1 @@
-My repository for learning how to handwrite certain pieces of code for fun and learning.
+My repository for learning how to handwrite and handsolve pieces of code, math and physics for fun and learning.
