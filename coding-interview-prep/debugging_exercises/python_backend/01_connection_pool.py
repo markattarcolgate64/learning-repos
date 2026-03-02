@@ -109,9 +109,10 @@ class ConnectionPool:
                 )
 
             conn.in_use = False
+            tmp_id = conn.id
             self._in_use.discard(conn.id)
             # Return connection to the available pool
-            self._available.append(Connection())
+            self._available.append(conn)
 
     @property
     def available_count(self) -> int:
