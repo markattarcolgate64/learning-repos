@@ -18,11 +18,16 @@ function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
+    console.log("Submitting")
 
     try {
+      console.log("Logging in")
+
       await login(username, password);
       navigate('/', { replace: true });
     } catch (err) {
+      console.log("Failing login")
+
       setError(err.response?.data?.error || 'Invalid credentials. Please try again.');
     } finally {
       setLoading(false);

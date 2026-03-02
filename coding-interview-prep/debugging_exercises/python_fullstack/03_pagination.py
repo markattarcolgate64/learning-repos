@@ -79,7 +79,7 @@ def paginate(dataset, page_size, cursor=None):
         # The cursor stores the index of the last item we returned.
         # We should start from the NEXT item.
         last_index = decode_cursor(cursor)
-        start = last_index  # resume from this index
+        start = last_index + 1 # resume from this index
 
     end = start + page_size
     items = dataset[start:end]

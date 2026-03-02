@@ -417,21 +417,26 @@ function authenticate(req, res, next) {
   if (!authHeader?.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'No token provided' });
   }
-
+  console.log("authenticate middleware", authHeader)
   try {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, JWT_SECRET);
 
     if (decoded.iat + TOKEN_TTL_SECONDS < Date.now()) {
+      console.log("failure token expired")
       return res.status(401).json({ error: 'Token expired' });
     }
 
     req.user = users.find(u => u.id === decoded.userId);
     if (!req.user) {
+      console.log("user not found")
+
       return res.status(401).json({ error: 'User not found' });
     }
     next();
   } catch (err) {
+    console.log("authenticate middleware failing invalid token")
+
     return res.status(401).json({ error: 'Invalid token' });
   }
 }
@@ -441,18 +446,26 @@ function authenticate(req, res, next) {
 // ---------------------------------------------------------------------------
 app.post('/api/auth/login', (req, res) => {
   const { username, password } = req.body;
+  console.log("Auth route arriving", username, password);
 
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password are required' });
   }
 
   const user = users.find(u => u.username === username && u.password === password);
+  console.log("user found", user);
+
   if (!user) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 
+  console.log("no user err", user);
+
   const token = jwt.sign({ userId: user.id }, JWT_SECRET);
+  console.log("jwt token", token);
+
   const { password: _, ...safeUser } = user;
+  console.log("safeUser", safeUser);
 
   res.json({ token, user: safeUser });
 });
@@ -466,6 +479,7 @@ app.post('/api/auth/me', authenticate, (req, res) => {
 // Project routes
 // ---------------------------------------------------------------------------
 app.get('/api/projects', authenticate, (req, res) => {
+  console.log("API projects arriving")
   const projectsWithCounts = projects.map(project => {
     const projectTasks = tasks.filter(t => t.projectId === project.id);
     return {
@@ -474,6 +488,7 @@ app.get('/api/projects', authenticate, (req, res) => {
       completedTaskCount: projectTasks.filter(t => t.status === 'done').length,
     };
   });
+  console.log("projects with counts", projectsWithCounts)
 
   res.json({ projects: projectsWithCounts });
 });
